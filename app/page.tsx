@@ -27,7 +27,7 @@ import {
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { motion, AnimatePresence } from 'motion/react';
-import { Coins, Info, ArrowUpRight, History, ChevronDown, ChevronUp, ExternalLink, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Coins, Info, ArrowUpRight, History, ChevronDown, ChevronUp, ExternalLink, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 interface SwapRecord {
   id: string;
@@ -161,6 +161,7 @@ export default function SwapPortal() {
   const [amountValues, setAmountValues] = useState({ from: '', to: '' });
   const [history, setHistory] = useState<SwapRecord[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('base_swap_history');
@@ -343,9 +344,78 @@ export default function SwapPortal() {
                       </p>
                     </div>
                   ) : (
-                    <SwapButton className="!bg-blue-600 hover:!bg-blue-500 !text-white !font-bold !py-4 !rounded-2xl !transition-all shadow-lg shadow-blue-900/20" />
+                    <button 
+                      type="button"
+                      onClick={() => setIsConfirming(true)}
+                      disabled={!amountValues.from || !amountValues.to}
+                      className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+                    >
+                      Review Swap
+                    </button>
                   )}
                 </div>
+
+                <AnimatePresence>
+                  {isConfirming && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+                    >
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                        className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-[32px] p-6 shadow-2xl space-y-6"
+                      >
+                        <div className="text-center space-y-2">
+                          <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-6 h-6 text-amber-500" />
+                          </div>
+                          <h3 className="text-xl font-bold text-white">Confirm Swap</h3>
+                          <p className="text-sm text-slate-400">Please review your transaction details</p>
+                        </div>
+
+                        <div className="space-y-4 bg-slate-950/50 p-4 rounded-2xl border border-white/5">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <img src={fromToken.image} alt="" className="w-5 h-5 rounded-full" />
+                              <span className="text-xs text-slate-400">Sell</span>
+                            </div>
+                            <span className="text-sm font-bold text-white">{amountValues.from} {fromToken.symbol}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <img src={toToken.image} alt="" className="w-5 h-5 rounded-full" />
+                              <span className="text-xs text-slate-400">Buy</span>
+                            </div>
+                            <span className="text-sm font-bold text-blue-400">{amountValues.to} {toToken.symbol}</span>
+                          </div>
+                          <div className="pt-2 border-t border-white/5 flex justify-between items-center">
+                            <span className="text-xs text-slate-500">Slippage Tolerance</span>
+                            <span className="text-xs font-medium text-slate-300">Auto</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setIsConfirming(false)}
+                            className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <div className="flex-1" onClick={() => setTimeout(() => setIsConfirming(false), 500)}>
+                            <SwapButton className="!bg-blue-600 hover:!bg-blue-500 !text-white !font-bold !py-3 !rounded-xl !transition-all !w-full !m-0" />
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-center text-slate-500">
+                          Transactions on Base are fast and permanent.
+                        </p>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 
                 <SwapMessage className="!text-slate-400 !text-xs !bg-transparent !p-2" />
                 <SwapToast />
