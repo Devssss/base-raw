@@ -1,0 +1,6 @@
+{
+  "name": "Base Swap Portal",
+  "description": "A seamless token swap portal built for the Base ecosystem, powered by OnchainKit and Farcaster Mini Apps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
