@@ -56,7 +56,91 @@ const CBBTCToken: Token = {
   image: 'https://dynamic-assets.coinbase.com/00c25cc2-ca97-408d-8d4e-1282c0f68d37/de1606d2-284a-4a2e-8e68-088820f66b74.png',
 };
 
-const DEPLOYED_TOKENS: Token[] = [ETHToken, USDCToken, CBBTCToken];
+const AEROToken: Token = {
+  address: '0x940181a065127c2112747C8be23FE2ca3e2d02c7',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Aerodrome',
+  symbol: 'AERO',
+  image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/assets/0x940181a065127c2112747C8be23FE2ca3e2d02c7/logo.png',
+};
+
+const DAIToken: Token = {
+  address: '0x50c5716b9dc5397416801269f2477ae0f27c9fda',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Dai',
+  symbol: 'DAI',
+  image: 'https://dynamic-assets.coinbase.com/f752f95cffc129486c91d4e78263590059e0a47d283626fa524316d2b638f2a13cc479709d3119e71e72b43b9533f86e9f298da177656689d0092c4cd42b2f6b/asset_icons/90f895521b218fd65d4911d33451ee88043644f6f874f63c87f27cc845dc6709.png',
+};
+
+const WETHToken: Token = {
+  address: '0x4200000000000000000000000000000000000006',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Wrapped Ether',
+  symbol: 'WETH',
+  image: 'https://dynamic-assets.coinbase.com/dbb4b4983bde81309ddab839523a0272847823353c618ccdaac9801ba27165158d063f99443e11f845707762bb9007f33923933c069707b951ee1b898129766/asset_icons/8d9990caa6405370de79344445353e6d156641e77fba147326df89d5a6c1e920.png',
+};
+
+const DEGENToken: Token = {
+  address: '0x4ed4E2415615166f19439607823573c52e1858c2',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Degen',
+  symbol: 'DEGEN',
+  image: 'https://dd.dexscreener.com/ds-data/tokens/base/0x4ed4e2415615166f19439607823573c52e1858c2.png',
+};
+
+const BRETTToken: Token = {
+  address: '0x532f27101965dd1a3c95fef19C0693A87d3a8274',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Brett',
+  symbol: 'BRETT',
+  image: 'https://dd.dexscreener.com/ds-data/tokens/base/0x532f27101965dd1a3c95fef19c0693a87d3a8274.png',
+};
+
+const TOSHIToken: Token = {
+  address: '0xAC1Bd2465aA556204E25F928503A2584102613a1',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Toshi',
+  symbol: 'TOSHI',
+  image: 'https://dd.dexscreener.com/ds-data/tokens/base/0xac1bd2465aa556204e25f928503a2584102613a1.png',
+};
+
+const TYBGToken: Token = {
+  address: '0x0d97F5d86f50FE299Bd3fb546b7d19fE5e984613',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Base God',
+  symbol: 'TYBG',
+  image: 'https://dd.dexscreener.com/ds-data/tokens/base/0x0d97f5d86f50fe299bd3fb546b7d19fe5e984613.png',
+};
+
+const MOCHIToken: Token = {
+  address: '0xF6e9327E456259ee99cF6147414b6f4cc17E7771',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Mochi',
+  symbol: 'MOCHI',
+  image: 'https://dd.dexscreener.com/ds-data/tokens/base/0xf6e9327e456259ee99cf6147414b6f4cc17e7771.png',
+};
+
+const DEPLOYED_TOKENS: Token[] = [
+  ETHToken, 
+  USDCToken, 
+  CBBTCToken, 
+  AEROToken, 
+  DAIToken, 
+  WETHToken, 
+  DEGENToken, 
+  BRETTToken, 
+  TOSHIToken, 
+  TYBGToken,
+  MOCHIToken
+];
 
 export default function SwapPortal() {
   const { address, isConnected } = useAccount();
@@ -157,7 +241,7 @@ export default function SwapPortal() {
                     {isConnected && balanceData && (
                       <button 
                         onClick={handleMaxClick}
-                        className="text-[10px] font-bold bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-md hover:bg-blue-600/40 transition-colors uppercase tracking-wider h-5 flex items-center"
+                        className="text-[10px] font-bold bg-blue-500/10 text-blue-400 px-2 py-1 rounded-lg hover:bg-blue-500/20 active:scale-95 transition-all uppercase tracking-wider h-6 flex items-center border border-blue-500/20 shadow-sm"
                       >
                         Max
                       </button>
