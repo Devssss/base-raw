@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { 
   Swap, 
@@ -14,6 +14,7 @@ import {
   SwapSettingsSlippageInput,
   SwapSettingsSlippageTitle
 } from '@coinbase/onchainkit/swap';
+import type { Token } from '@coinbase/onchainkit/token';
 import { 
   ConnectWallet, 
   Wallet, 
@@ -23,13 +24,50 @@ import {
   WalletDropdownFundLink, 
   WalletDropdownLink 
 } from '@coinbase/onchainkit/wallet';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import { motion } from 'motion/react';
 import { Coins, Info, ArrowUpRight } from 'lucide-react';
 
+const ETHToken: Token = {
+  address: '',
+  chainId: 8453,
+  decimals: 18,
+  name: 'Ethereum',
+  symbol: 'ETH',
+  image: 'https://dynamic-assets.coinbase.com/dbb4b4983bde81309ddab839523a0272847823353c618ccdaac9801ba27165158d063f99443e11f845707762bb9007f33923933c069707b951ee1b898129766/asset_icons/8d9990caa6405370de79344445353e6d156641e77fba147326df89d5a6c1e920.png',
+};
+
+const USDCToken: Token = {
+  address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  chainId: 8453,
+  decimals: 6,
+  name: 'USDC',
+  symbol: 'USDC',
+  image: 'https://dynamic-assets.coinbase.com/3c15df5e2ca7d70ebadd8df5ad0399178b81eb0d2193b4a203a950df3f0b4c2b960a02ba4d3393962664979e2730ca78912759e66cb5dcf5697669818a7c2936/asset_icons/97ef979703ec88079543663b1b919379493f06059638f24419ad2040c1aacdc4.png',
+};
+
+const CBBTCToken: Token = {
+  address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf',
+  chainId: 8453,
+  decimals: 8,
+  name: 'cbBTC',
+  symbol: 'cbBTC',
+  image: 'https://dynamic-assets.coinbase.com/00c25cc2-ca97-408d-8d4e-1282c0f68d37/de1606d2-284a-4a2e-8e68-088820f66b74.png',
+};
+
+const DEPLOYED_TOKENS: Token[] = [ETHToken, USDCToken, CBBTCToken];
+
 export default function SwapPortal() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const [isReady, setIsReady] = useState(false);
+  const [fromToken, setFromToken] = useState<Token>(ETHToken);
+  const [amountValues, setAmountValues] = useState({ from: '', to: '' });
+
+  const { data: balanceData } = useBalance({
+    address,
+    token: fromToken.address ? (fromToken.address as `0x${string}`) : undefined,
+  });
 
   useEffect(() => {
     const init = async () => {
@@ -41,6 +79,21 @@ export default function SwapPortal() {
       setIsReady(true);
     };
     init();
+  }, []);
+
+  const handleMaxClick = useCallback(() => {
+    if (balanceData) {
+      const formattedBalance = formatUnits(balanceData.value, balanceData.decimals);
+      setAmountValues(prev => ({ ...prev, from: formattedBalance }));
+    }
+  }, [balanceData]);
+
+  const handleAmountChange = useCallback((values: { from: string; to: string }) => {
+    setAmountValues(values);
+  }, []);
+
+  const handleFromChange = useCallback((token: Token) => {
+    setFromToken(token);
   }, []);
 
   if (!isReady) return null;
@@ -88,10 +141,28 @@ export default function SwapPortal() {
         <div className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-[32px] blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
           <div className="relative bg-slate-900/90 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-[28px] shadow-2xl">
-            <Swap title="Swap Portal" className="!bg-transparent !p-0 !border-0 !shadow-none">
+            <Swap 
+              title="Swap Portal" 
+              className="!bg-transparent !p-0 !border-0 !shadow-none"
+              from={DEPLOYED_TOKENS}
+              to={DEPLOYED_TOKENS}
+              amountValues={amountValues}
+              onAmountChange={handleAmountChange}
+              onFrom={handleFromChange}
+            >
               <div className="space-y-3 text-slate-50">
                 <div className="flex justify-between items-center px-1">
-                  <span className="text-sm font-medium text-slate-400">Sell</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-400">Sell</span>
+                    {isConnected && balanceData && (
+                      <button 
+                        onClick={handleMaxClick}
+                        className="text-[10px] font-bold bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-md hover:bg-blue-600/40 transition-colors uppercase tracking-wider h-5 flex items-center"
+                      >
+                        Max
+                      </button>
+                    )}
+                  </div>
                   <SwapSettings>
                     <SwapSettingsSlippageTitle className="text-slate-50">Slippage</SwapSettingsSlippageTitle>
                     <SwapSettingsSlippageDescription className="text-slate-400">
@@ -103,7 +174,7 @@ export default function SwapPortal() {
                 
                 <SwapAmountInput
                   label="Sell"
-                  swappableTokens={[]} 
+                  swappableTokens={DEPLOYED_TOKENS} 
                   type="from"
                   className="!bg-slate-800/50 !border-slate-700/50 !rounded-2xl !p-4 hover:!border-blue-500/30 transition-colors"
                 />
@@ -118,7 +189,7 @@ export default function SwapPortal() {
 
                 <SwapAmountInput
                   label="Buy"
-                  swappableTokens={[]}
+                  swappableTokens={DEPLOYED_TOKENS}
                   type="to"
                   className="!bg-slate-800/50 !border-slate-700/50 !rounded-2xl !p-4 hover:!border-blue-500/30 transition-colors"
                 />
