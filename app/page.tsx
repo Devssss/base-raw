@@ -27,6 +27,7 @@ import {
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { motion, AnimatePresence } from 'motion/react';
+import Image from 'next/image';
 import { Coins, Info, ArrowUpRight, History, ChevronDown, ChevronUp, ExternalLink, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 interface SwapRecord {
@@ -294,7 +295,19 @@ export default function SwapPortal() {
               <div className="space-y-3 text-slate-50">
                 <div className="flex justify-between items-center px-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-400">Sell</span>
+                    <div className="flex items-center gap-2">
+                      {fromToken.image && (
+                        <Image 
+                          src={fromToken.image} 
+                          alt="" 
+                          width={16} 
+                          height={16} 
+                          className="rounded-full opacity-60" 
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      <span className="text-sm font-medium text-slate-400">Sell</span>
+                    </div>
                     {isConnected && balanceData && (
                       <button 
                         onClick={handleMaxClick}
@@ -325,7 +338,19 @@ export default function SwapPortal() {
                 </div>
 
                 <div className="flex justify-between items-center px-1 pt-2">
-                  <span className="text-sm font-medium text-slate-400">Buy</span>
+                  <div className="flex items-center gap-2">
+                    {toToken.image && (
+                      <Image 
+                        src={toToken.image} 
+                        alt="" 
+                        width={16} 
+                        height={16} 
+                        className="rounded-full opacity-60" 
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
+                    <span className="text-sm font-medium text-slate-400">Buy</span>
+                  </div>
                 </div>
 
                 <SwapAmountInput
@@ -380,14 +405,32 @@ export default function SwapPortal() {
                         <div className="space-y-4 bg-slate-950/50 p-4 rounded-2xl border border-white/5">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                              <img src={fromToken.image} alt="" className="w-5 h-5 rounded-full" />
+                              {fromToken.image && (
+                                <Image 
+                                  src={fromToken.image} 
+                                  alt="" 
+                                  width={20} 
+                                  height={20} 
+                                  className="rounded-full" 
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
                               <span className="text-xs text-slate-400">Sell</span>
                             </div>
                             <span className="text-sm font-bold text-white">{amountValues.from} {fromToken.symbol}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                              <img src={toToken.image} alt="" className="w-5 h-5 rounded-full" />
+                              {toToken.image && (
+                                <Image 
+                                  src={toToken.image} 
+                                  alt="" 
+                                  width={20} 
+                                  height={20} 
+                                  className="rounded-full" 
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
                               <span className="text-xs text-slate-400">Buy</span>
                             </div>
                             <span className="text-sm font-bold text-blue-400">{amountValues.to} {toToken.symbol}</span>
@@ -462,8 +505,26 @@ export default function SwapPortal() {
                       <div key={record.id} className="p-3 bg-slate-900/40 border border-white/5 rounded-xl flex items-center justify-between group/item">
                         <div className="flex items-center gap-3">
                           <div className="flex -space-x-2">
-                            <img src={record.fromToken.image} alt="From" className="w-6 h-6 rounded-full border border-slate-900 relative z-10" />
-                            <img src={record.toToken.image} alt="To" className="w-6 h-6 rounded-full border border-slate-900" />
+                            {record.fromToken.image && (
+                              <Image 
+                                src={record.fromToken.image} 
+                                alt="From" 
+                                width={24} 
+                                height={24} 
+                                className="rounded-full border border-slate-900 relative z-10" 
+                                referrerPolicy="no-referrer"
+                              />
+                            )}
+                            {record.toToken.image && (
+                              <Image 
+                                src={record.toToken.image} 
+                                alt="To" 
+                                width={24} 
+                                height={24} 
+                                className="rounded-full border border-slate-900" 
+                                referrerPolicy="no-referrer"
+                              />
+                            )}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
