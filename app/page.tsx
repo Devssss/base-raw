@@ -26,8 +26,19 @@ import {
 } from '@coinbase/onchainkit/wallet';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
-import { motion } from 'motion/react';
-import { Coins, Info, ArrowUpRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Coins, Info, ArrowUpRight, History, ChevronDown, ChevronUp, ExternalLink, Clock, CheckCircle2, XCircle } from 'lucide-react';
+
+interface SwapRecord {
+  id: string;
+  fromToken: Token;
+  toToken: Token;
+  fromAmount: string;
+  toAmount: string;
+  status: 'pending' | 'success' | 'error';
+  timestamp: number;
+  txHash?: string;
+}
 
 const ETHToken: Token = {
   address: '',
@@ -146,7 +157,25 @@ export default function SwapPortal() {
   const { address, isConnected } = useAccount();
   const [isReady, setIsReady] = useState(false);
   const [fromToken, setFromToken] = useState<Token>(ETHToken);
+  const [toToken, setToToken] = useState<Token>(USDCToken);
   const [amountValues, setAmountValues] = useState({ from: '', to: '' });
+  const [history, setHistory] = useState<SwapRecord[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('base_swap_history');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Failed to parse history', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('base_swap_history', JSON.stringify(history));
+  }, [history]);
 
   const { data: balanceData } = useBalance({
     address,
@@ -180,11 +209,36 @@ export default function SwapPortal() {
     setFromToken(token);
   }, []);
 
+  const handleToChange = useCallback((token: Token) => {
+    setToToken(token);
+  }, []);
+
+  const handleStatus = useCallback((status: any) => {
+    if (status.statusName === 'success' && status.statusData?.transactionReceipt) {
+      const newRecord: SwapRecord = {
+        id: status.statusData.transactionReceipt.transactionHash || Math.random().toString(),
+        fromToken: fromToken,
+        toToken: toToken,
+        fromAmount: amountValues.from,
+        toAmount: amountValues.to || '...', 
+        status: 'success',
+        timestamp: Date.now(),
+        txHash: status.statusData.transactionReceipt.transactionHash
+      };
+      setHistory(prev => [newRecord, ...prev].slice(0, 50));
+    }
+  }, [fromToken, toToken, amountValues]);
+
   if (!isReady) return null;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950">
       
+      {/* Corner Indicator */}
+      <div className="absolute top-4 left-4 z-50 text-white font-bold opacity-50 select-none">
+        1
+      </div>
+
       {/* Header / Wallet Section */}
       <div className="absolute top-4 right-4 z-50">
         <Wallet>
@@ -233,6 +287,8 @@ export default function SwapPortal() {
               amountValues={amountValues}
               onAmountChange={handleAmountChange}
               onFrom={handleFromChange}
+              onTo={handleToChange}
+              onStatus={handleStatus}
             >
               <div className="space-y-3 text-slate-50">
                 <div className="flex justify-between items-center px-1">
@@ -296,6 +352,86 @@ export default function SwapPortal() {
               </div>
             </Swap>
           </div>
+        </div>
+
+        {/* Swap History Section */}
+        <div className="relative">
+          <button 
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className="w-full flex items-center justify-between p-4 bg-slate-900/50 hover:bg-slate-900/80 border border-white/5 rounded-2xl transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                <History className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-white">Recent Swaps</p>
+                <p className="text-[10px] text-slate-500">{history.length} transactions stored locally</p>
+              </div>
+            </div>
+            {isHistoryOpen ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+          </button>
+
+          <AnimatePresence>
+            {isHistoryOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {history.length === 0 ? (
+                    <div className="text-center py-8 rounded-2xl border border-dashed border-white/5 bg-slate-900/20">
+                      <Clock className="w-8 h-8 text-slate-700 mx-auto mb-2" />
+                      <p className="text-xs text-slate-500">No swaps yet. Go make some history!</p>
+                    </div>
+                  ) : (
+                    history.map((record) => (
+                      <div key={record.id} className="p-3 bg-slate-900/40 border border-white/5 rounded-xl flex items-center justify-between group/item">
+                        <div className="flex items-center gap-3">
+                          <div className="flex -space-x-2">
+                            <img src={record.fromToken.image} alt="From" className="w-6 h-6 rounded-full border border-slate-900 relative z-10" />
+                            <img src={record.toToken.image} alt="To" className="w-6 h-6 rounded-full border border-slate-900" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-white">{record.fromAmount} {record.fromToken.symbol}</span>
+                              <ArrowUpRight className="w-2.5 h-2.5 text-slate-500" />
+                              <span className="text-xs font-bold text-blue-400">{record.toAmount} {record.toToken.symbol}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-500">
+                              {new Date(record.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {record.status === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          ) : record.status === 'error' ? (
+                            <XCircle className="w-4 h-4 text-rose-500" />
+                          ) : (
+                            <Clock className="w-4 h-4 text-blue-500 animate-pulse" />
+                          )}
+                          {record.txHash && (
+                            <a 
+                              href={`https://basescan.org/tx/${record.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-md hover:bg-blue-500/10 text-slate-500 hover:text-blue-400 transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Footer Links */}
